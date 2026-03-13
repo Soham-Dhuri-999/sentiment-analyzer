@@ -27,6 +27,10 @@ def analyze():
 
     output = response.json()
 
+    # handle API errors safely
+    if isinstance(output, dict) and "error" in output:
+        return jsonify({"error": output["error"]}), 500
+
     label = output[0]["label"]
     score = round(output[0]["score"] * 100, 2)
 
