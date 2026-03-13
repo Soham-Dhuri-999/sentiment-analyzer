@@ -8,7 +8,7 @@ function App() {
   const analyzeText = async () => {
     if (!text) return;
     setLoading(true);
-    const response = await fetch("https://sentiment-analyzer-backend-tavz.onrender.com", {
+    const response = await fetch("https://sentiment-analyzer-backend-tavz.onrender.com/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
