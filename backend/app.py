@@ -13,15 +13,26 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 def analyze():
     data = request.get_json()
     text = data.get("text", "")
+
     if not text:
         return jsonify({"error": "No text provided"}), 400
-    
+
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    response = requests.post(API_URL, headers=headers, json={"inputs": text})
-    result = response.json()[0][0]
+
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        json={"inputs": text}
+    )
+
+    output = response.json()
+
+    label = output[0]["label"]
+    score = round(output[0]["score"] * 100, 2)
+
     return jsonify({
-        "label": result["label"],
-        "score": round(result["score"] * 100, 2)
+        "label": label,
+        "score": score
     })
 
 if __name__ == "__main__":
