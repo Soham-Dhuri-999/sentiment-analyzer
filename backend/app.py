@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
+import time
+
 
 app = Flask(__name__)
 CORS(app)
@@ -24,25 +26,23 @@ def analyze():
         return jsonify({"error": "No text provided"}), 400
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-    response = requests.post(API_URL, headers=headers, json={"inputs": text})
-    output = response.json()
+    
+    for attempt in range(3):
+        response = requests.post(API_URL, headers=headers, json={"inputs": text})
+        output = response.json()
+        if isinstance(output, dict) and "error" in output:
+            if "loading" in output["error"].lower():
+                time.sleep(10)
+                continue
+            return jsonify({"error": output["error"]}), 500
+        break
 
-    print("HF Status:", response.status_code)
-    print("HF Output:", output)
-
-    if isinstance(output, dict) and "error" in output:
-        return jsonify({"error": output["error"]}), 500
-
-    # Handle both [[{...}]] and [{...}] response formats
     if isinstance(output[0], list):
         result = output[0][0]
     else:
         result = output[0]
 
-    return jsonify({
-        "label": result["label"],
-        "score": round(result["score"] * 100, 2)
-    })
+    return jsonify({"label": result["label"], "score": round(result["score"] * 100, 2)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
