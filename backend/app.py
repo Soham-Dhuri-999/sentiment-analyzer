@@ -20,27 +20,25 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 def analyze():
     data = request.get_json()
     text = data.get("text", "")
-
     if not text:
         return jsonify({"error": "No text provided"}), 400
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": text}
-    )
+    response = requests.post(API_URL, headers=headers, json={"inputs": text})
+    output = response.json()
 
     print("HF Status:", response.status_code)
-    print("HF Response:", response.text)
-
-    output = response.json()
+    print("HF Output:", output)
 
     if isinstance(output, dict) and "error" in output:
         return jsonify({"error": output["error"]}), 500
 
-    result = output[0][0]
+    # Handle both [[{...}]] and [{...}] response formats
+    if isinstance(output[0], list):
+        result = output[0][0]
+    else:
+        result = output[0]
+
     return jsonify({
         "label": result["label"],
         "score": round(result["score"] * 100, 2)
