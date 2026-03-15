@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
-API_URL = "https://router.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
+API_URL = "https://router.huggingface.co/hf-inference/models/distilbert-base-uncased-finetuned-sst-2-english"
 
 @app.route("/", methods=["GET"])
 def health():
@@ -34,6 +34,10 @@ def analyze():
         try:
             response = requests.post(API_URL, headers=headers, json={"inputs": text}, timeout=30)
             print(f"Attempt {attempt+1} | Status: {response.status_code}")
+            print(f"Status code: {response.status_code}")
+            print(f"Raw response: {response.text[:500]}")  # log first 500 chars
+            if not response.text:
+                return jsonify({"error": "HuggingFace returned empty response"}), 500
             output = response.json()
             print(f"HF Output: {output}")  # THIS is the key line — you'll see it in Render logs now
 
