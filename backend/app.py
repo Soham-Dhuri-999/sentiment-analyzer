@@ -22,7 +22,7 @@ def analyze():
 
         result = client.text_classification(
             data["text"],
-            model="distilbert-base-uncased-finetuned-sst-2-english"
+            model="distilbert/distilbert-base-uncased-finetuned-sst-2-english"
         )
         top = result[0]
         return jsonify({"label": top.label, "score": round(top.score * 100, 2)})
