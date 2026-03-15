@@ -8,14 +8,34 @@ function App() {
   const analyzeText = async () => {
     if (!text) return;
     setLoading(true);
-    const response = await fetch("https://sentiment-analyzer-backend-9uys.onrender.com/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    const data = await response.json();
-    setResult(data);
-    setLoading(false);
+
+    try {
+      // Step 1: Wake up the server first
+      await fetch("https://sentiment-analyzer-backend-9uys.onrender.com/");
+
+      // Step 2: Wait 2 seconds for Flask to be fully ready
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Step 3: Now send the real request
+      const response = await fetch("https://sentiment-analyzer-backend-9uys.onrender.com/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setResult({ label: "ERROR", score: 0, error: data.error });
+      } else {
+        setResult(data);
+      }
+
+    } catch (err) {
+      setResult({ label: "ERROR", score: 0, error: "Could not reach server." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,13 +53,24 @@ function App() {
         onClick={analyzeText}
         style={{ padding: "10px 24px", fontSize: "16px", cursor: "pointer" }}
       >
-        {loading ? "Analyzing..." : "Analyze"}
+        {loading ? "Waking up AI... please wait (~15s)" : "Analyze"}
       </button>
 
       {result && (
-        <div style={{ marginTop: "24px", padding: "20px", background: result.label === "POSITIVE" ? "#d4edda" : "#f8d7da", borderRadius: "8px" }}>
-          <h2>{result.label}</h2>
-          <p>Confidence: {result.score}%</p>
+        <div style={{
+          marginTop: "24px",
+          padding: "20px",
+          background: result.label === "POSITIVE" ? "#d4edda" : result.label === "ERROR" ? "#fff3cd" : "#f8d7da",
+          borderRadius: "8px"
+        }}>
+          {result.label === "ERROR" ? (
+            <p style={{ color: "#856404" }}>⚠️ Error: {result.error}</p>
+          ) : (
+            <>
+              <h2>{result.label}</h2>
+              <p>Confidence: {result.score}%</p>
+            </>
+          )}
         </div>
       )}
     </div>
