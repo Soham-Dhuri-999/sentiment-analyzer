@@ -8,15 +8,12 @@ function App() {
   const analyzeText = async () => {
     if (!text) return;
     setLoading(true);
+    setResult(null);
 
     try {
-      // Step 1: Wake up the server first
       await fetch("https://sentiment-analyzer-backend-9uys.onrender.com/");
-
-      // Step 2: Wait 2 seconds for Flask to be fully ready
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Step 3: Now send the real request
       const response = await fetch("https://sentiment-analyzer-backend-9uys.onrender.com/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,6 +48,7 @@ function App() {
       />
       <button
         onClick={analyzeText}
+        disabled={loading}
         style={{ padding: "10px 24px", fontSize: "16px", cursor: "pointer" }}
       >
         {loading ? "Waking up AI... please wait (~15s)" : "Analyze"}
